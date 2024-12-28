@@ -13,7 +13,7 @@ export interface Player {
 }
 
 export interface SimulationConfig {
-  format: 'bo1' | 'bo3' | 'bo3-no-tiebreak' | 'bo3-double-loss';
+  format: 'bo1' | 'bo3' | 'bo3-no-draws';
   iterations: number;
   rounds: number;
   showProgress: boolean;

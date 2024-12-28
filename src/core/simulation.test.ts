@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import { generatePlayers } from './simulation';
 import { TournamentSimulation } from './tournament';
 import { Player, SimulationConfig } from './types';
+import { calculateWinProbability } from './utils';
 
 describe('TournamentSimulation', () => {
   const players: Player[] = [
@@ -46,19 +47,17 @@ describe('TournamentSimulation', () => {
   });
 
   test('should calculate win probability correctly', () => {
-    const simulation = new TournamentSimulation(players, config);
-    const probability = simulation['calculateWinProbability'](players[0], players[1]);
+    const probability = calculateWinProbability(players[0], players[1], 'elo');
     assert.ok(probability > 0.5);
     assert.ok(probability < 1);
   });
 
   test('should calculate trueskill win probability correctly', () => {
-    const simulation = new TournamentSimulation(players, config);
-    const probability = simulation['calculateTrueSkillWinProbability'](players[0], players[1]);
+    const probability = calculateWinProbability(players[0], players[1], 'trueskill');
     assert.ok(probability >= 0);
     assert.ok(probability <= 1);
     // Player 1 should have higher win probability due to higher rating
-    const reverseProbability = simulation['calculateTrueSkillWinProbability'](players[1], players[0]);
+    const reverseProbability = calculateWinProbability(players[1], players[0], 'trueskill');
     assert.ok(probability > reverseProbability);
   });
 });

@@ -1,6 +1,8 @@
 import { TournamentSimulation } from './tournament';
 import { TournamentConfig, PlayerConfig } from './config';
 import { Player } from './types';
+import { SimulationStats } from './stats';
+import { normalRandom } from './utils';
 
 export function runSimulation(config: TournamentConfig) {
   const startTime = Date.now();
@@ -9,13 +11,8 @@ export function runSimulation(config: TournamentConfig) {
   const players = generatePlayers(config.players);
   const simulation = new TournamentSimulation(players, config.simulation);
   
-  // Initialize overall stats
-  const overallStats = players.map(player => ({
-    id: player.id,
-    totalWins: 0,
-    totalLosses: 0,
-    totalDraws: 0
-  }));
+  // Initialize statistics tracking
+  const stats = new SimulationStats(players, config.simulation.iterations);
 
   for (let i = 0; i < config.simulation.iterations; i++) {
     // Reset player stats for this iteration
@@ -30,12 +27,8 @@ export function runSimulation(config: TournamentConfig) {
       simulation.simulateRound(players, round);
     }
 
-    // Update overall stats
-    players.forEach((player, index) => {
-      overallStats[index].totalWins += player.wins;
-      overallStats[index].totalLosses += player.losses;
-      overallStats[index].totalDraws += player.draws;
-    });
+    // Record iteration results
+    stats.recordIterationResults(players);
 
     if (config.simulation.showProgress) {
       console.log(`Running iteration ${i + 1} of ${config.simulation.iterations}`);
@@ -48,18 +41,20 @@ export function runSimulation(config: TournamentConfig) {
       score: player.wins + (player.draws * 0.5)
     })).sort((a, b) => b.score - a.score);
 
-    console.log(`\nIteration ${i + 1} Results:`);
-    console.log('┌───────────┬──────────┬──────────┐');
-    console.log('│ Player ID │ Rating   │ Score    │');
-    console.log('├───────────┼──────────┼──────────┤');
-    iterationResults.forEach(player => {
-      console.log(`│ ${player.id.padEnd(9)} │ ${player.rating.toString().padEnd(8)} │ ${player.score.toFixed(1).padStart(8)} │`);
-    });
-    console.log('└───────────┴──────────┴──────────┘');
+    if (config.simulation.showProgress) {
+      console.log(`\nIteration ${i + 1} Results:`);
+      console.log('┌───────────┬──────────┬──────────┐');
+      console.log('│ Player ID │ Rating   │ Score    │');
+      console.log('├───────────┼──────────┼──────────┤');
+      iterationResults.forEach(player => {
+        console.log(`│ ${player.id.padEnd(9)} │ ${player.rating.toString().padEnd(8)} │ ${player.score.toFixed(1).padStart(8)} │`);
+      });
+      console.log('└───────────┴──────────┴──────────┘');
 
-    // Determine and log the winner of this iteration
-    const winner = iterationResults[0];
-    console.log(`\nWinner of iteration ${i + 1}: Player ${winner.id} (Rating: ${winner.rating})`);
+      // Determine and log the winner of this iteration
+      const winner = iterationResults[0];
+      console.log(`\nWinner of iteration ${i + 1}: Player ${winner.id} (Rating: ${winner.rating})`);
+    }
   }
 
   const endTime = Date.now();
@@ -67,22 +62,8 @@ export function runSimulation(config: TournamentConfig) {
   const seconds = Math.floor(duration / 1000);
   const milliseconds = duration % 1000;
 
-  // Calculate and display overall performance
-  const overallResults = overallStats.map(stats => ({
-    id: stats.id,
-    rating: players.find(p => p.id === stats.id)!.rating,
-    avgPoints: (stats.totalWins + (stats.totalDraws * 0.5)) / config.simulation.iterations
-  })).sort((a, b) => b.avgPoints - a.avgPoints);
-
-  // Print overall results table
-  console.log('\nOverall Performance Summary:');
-  console.log('┌───────────┬──────────┬──────────────┐');
-  console.log('│ Player ID │ Rating   │ Avg Points   │');
-  console.log('├───────────┼──────────┼──────────────┤');
-  overallResults.forEach(player => {
-    console.log(`│ ${player.id.padEnd(9)} │ ${player.rating.toString().padEnd(8)} │ ${player.avgPoints.toFixed(2).padStart(12)} │`);
-  });
-  console.log('└───────────┴──────────┴──────────────┘');
+  // Display overall performance statistics
+  stats.printOverallResults();
 
   console.log(`\nSimulation completed in ${seconds}.${milliseconds.toString().padStart(3, '0')} seconds`);
 }
@@ -115,11 +96,4 @@ export function generatePlayers(playerConfig: PlayerConfig): Player[] {
   }
 
   return players;
-}
-
-function normalRandom(mean: number, stdDev: number): number {
-  let u = 0, v = 0;
-  while(u === 0) u = Math.random();
-  while(v === 0) v = Math.random();
-  return mean + stdDev * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
 }

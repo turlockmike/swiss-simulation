@@ -1,4 +1,5 @@
 import { MatchResult, Player, SimulationConfig } from './types';
+import { calculateWinProbability } from './utils';
 
 export class TournamentSimulation {
   private players: Player[];
@@ -9,19 +10,76 @@ export class TournamentSimulation {
     this.config = config;
   }
 
-  public simulateMatch(playerA: Player, playerB: Player): MatchResult {
-    const aWinProbability = this.calculateWinProbability(playerA, playerB);
-    const baseDrawProbability = this.config.drawProbability ?? 0.1;
-    const drawProbability = baseDrawProbability * (1 - Math.abs(aWinProbability - 0.5)); // Higher draw chance for closer matches
+  private simulateGame(playerA: Player, playerB: Player): MatchResult {
+    const aWinProbability = calculateWinProbability(playerA, playerB, this.config.ratingSystem);
+    const drawProbability = this.config.drawProbability ?? 0.1;
+
+    // Handle forced draws
+    if (drawProbability === 1.0) {
+      return { winnerId: null, loserId: null, draw: true };
+    }
+
+    const adjustedDrawProbability = drawProbability * (1 - Math.abs(aWinProbability - 0.5));
     const result = Math.random();
 
-    if (result < aWinProbability - drawProbability/2) {
+    if (result < aWinProbability * (1 - adjustedDrawProbability)) {
       return { winnerId: playerA.id, loserId: playerB.id, draw: false };
-    } else if (result < aWinProbability + drawProbability/2) {
+    } else if (result < aWinProbability * (1 - adjustedDrawProbability) + adjustedDrawProbability) {
       return { winnerId: null, loserId: null, draw: true };
     } else {
       return { winnerId: playerB.id, loserId: playerA.id, draw: false };
     }
+  }
+
+  public simulateMatch(playerA: Player, playerB: Player): MatchResult {
+    if (this.config.format === 'bo1') {
+      return this.simulateGame(playerA, playerB);
+    }
+
+    // Best of 3 logic - exactly 3 games
+    let playerAWins = 0;
+    let playerBWins = 0;
+    
+    for (let game = 0; game < 3; game++) {
+      const result = this.simulateGame(playerA, playerB);
+      if (result.winnerId === playerA.id) {
+        playerAWins++;
+      } else if (result.winnerId === playerB.id) {
+        playerBWins++;
+      }
+      // Draws count as no result for the game
+    }
+
+    if (playerAWins >= 2) {
+      playerA.wins++;
+      playerB.losses++;
+      return { winnerId: playerA.id, loserId: playerB.id, draw: false };
+    } else if (playerBWins >= 2) {
+      playerB.wins++;
+      playerA.losses++;
+      return { winnerId: playerB.id, loserId: playerA.id, draw: false };
+    }
+    
+    if (this.config.format === 'bo3-no-draws') {
+      // Coin flip to decide winner when match would normally draw
+      const winner = Math.random() < 0.5 ? playerA : playerB;
+      const loser = winner === playerA ? playerB : playerA;
+      
+      // Update stats for the forced win/loss
+      winner.wins++;
+      loser.losses++;
+      
+      return { 
+        winnerId: winner.id, 
+        loserId: loser.id, 
+        draw: false 
+      };
+    }
+    
+    // Regular bo3 format results in a draw
+    playerA.draws++;
+    playerB.draws++;
+    return { winnerId: null, loserId: null, draw: true };
   }
 
   public simulateRound(players: Player[], roundNumber: number): void {
@@ -82,16 +140,5 @@ export class TournamentSimulation {
       playerB.wins++;
       playerA.losses++;
     }
-  }
-
-  private calculateWinProbability(playerA: Player, playerB: Player): number {
-    const ratingDiff = playerA.rating - playerB.rating;
-    return 1 / (1 + Math.pow(10, -ratingDiff / 400));
-  }
-
-  private calculateTrueSkillWinProbability(playerA: Player, playerB: Player): number {
-    const beta = 25 / 6; // Default value for beta in TrueSkill
-    const ratingDiff = playerA.rating - playerB.rating;
-    return 1 / (1 + Math.exp(-ratingDiff / (Math.sqrt(2) * beta)));
   }
 }

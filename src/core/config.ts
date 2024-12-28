@@ -6,12 +6,13 @@ export interface PlayerConfig {
 }
 
 export interface SimulationConfig {
-  format: 'bo1' | 'bo3' | 'bo3-no-tiebreak' | 'bo3-double-loss';
+  format: 'bo1' | 'bo3';
   iterations: number;
   rounds: number;
   showProgress: boolean;
   drawProbability?: number;
   ratingSystem: 'elo' | 'trueskill';
+  bo3NoDraws?: boolean;
 }
 
 export interface TournamentConfig {
