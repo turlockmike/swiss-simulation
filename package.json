@@ -1,0 +1,33 @@
+{
+  "name": "swiss-sim",
+  "version": "1.0.0",
+  "description": "CLI simulation application with web interface",
+  "main": "dist/cli/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w",
+    "cli": "tsx src/cli/index.ts",
+    "start": "tsx src/web/server.ts",
+    "test": "tsx --test src/core/**/*.test.ts"
+  },
+  "keywords": [
+    "simulation",
+    "cli",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "@types/distributions": "^2.0.2",
+    "@types/node": "22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "distributions": "^2.2.0"
+  }
+}
