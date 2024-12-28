@@ -88,4 +88,4 @@ public
 dist
 build
 out
-.agent
+.agent/
