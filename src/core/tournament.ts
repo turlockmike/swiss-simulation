@@ -14,7 +14,7 @@ export class TournamentSimulation {
     const baseDrawProbability = this.config.drawProbability ?? 0.1;
     const drawProbability = baseDrawProbability * (1 - Math.abs(aWinProbability - 0.5)); // Higher draw chance for closer matches
     const result = Math.random();
-    
+
     if (result < aWinProbability - drawProbability/2) {
       return { winnerId: playerA.id, loserId: playerB.id, draw: false };
     } else if (result < aWinProbability + drawProbability/2) {

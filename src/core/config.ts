@@ -11,6 +11,7 @@ export interface SimulationConfig {
   rounds: number;
   showProgress: boolean;
   drawProbability?: number;
+  ratingSystem: 'elo' | 'trueskill';
 }
 
 export interface TournamentConfig {

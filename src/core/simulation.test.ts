@@ -15,7 +15,8 @@ describe('TournamentSimulation', () => {
     iterations: 100,
     rounds: 3,
     showProgress: false,
-    drawProbability: 0.2
+    drawProbability: 0.2,
+    ratingSystem: 'elo'
   };
 
   test('should initialize with players and config', () => {
@@ -134,7 +135,8 @@ describe('Player Generation', () => {
       format: 'bo1',
       iterations: 100,
       rounds: 3,
-      showProgress: false
+      showProgress: false,
+      ratingSystem: 'elo'
     };
     
     const simulation = new TournamentSimulation(players, config);
@@ -168,7 +170,8 @@ describe('Player Generation', () => {
       format: 'bo1',
       iterations: 100,
       rounds: 3,
-      showProgress: false
+      showProgress: false,
+      ratingSystem: 'elo'
     };
     
     const simulation = new TournamentSimulation(players, config);

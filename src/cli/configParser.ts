@@ -11,6 +11,8 @@ export function parseCliArgs(): TournamentConfig {
     .option('-f, --format <type>', 'Match format (bo1|bo3)', 'bo1')
     .option('-i, --iterations <number>', 'Number of simulations', '100')
     .option('-r, --rounds <number>', 'Number of rounds per tournament', '9')
+    .option('--draw <probability>', 'Probability of a draw (0-1)', '0.1')
+    .option('--rating <system>', 'Rating system to use (elo|trueskill)', 'elo')
     .parse(process.argv);
 
   const options = program.opts();
@@ -26,7 +28,9 @@ export function parseCliArgs(): TournamentConfig {
       format: options.format,
       iterations: parseInt(options.iterations, 10),
       rounds: parseInt(options.rounds, 10),
-      showProgress: true
+      showProgress: true,
+      drawProbability: parseFloat(options.draw),
+      ratingSystem: options.rating as 'elo' | 'trueskill'
     }
   };
 
